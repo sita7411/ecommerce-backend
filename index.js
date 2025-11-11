@@ -27,7 +27,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://ecommerce-frontend-ochre-eight-96.vercel.app", // Vercel frontend
-  "https://admin-frontend.vercel.app" // Vercel admin (if any)
+  "https://ecommerce-admin-neon-one.vercel.app" // ✅ Add this
 ];
 
 app.use(
