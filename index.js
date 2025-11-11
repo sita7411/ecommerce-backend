@@ -4,7 +4,6 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
-const ExcelJS = require("exceljs"); // small letters 'exceljs'
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -22,26 +21,34 @@ app.use(
   })
 );
 
-// CORS configuration
+// -------------------- CORS CONFIGURATION --------------------
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://ecommerce-frontend-ochre-eight-96.vercel.app", // Vercel frontend
-  "https://ecommerce-admin-neon-one.vercel.app" // ✅ Add this
+  "https://ecommerce-frontend-ochre-eight-96.vercel.app",
+  "https://ecommerce-admin-neon-one.vercel.app",
 ];
 
+// Dynamic origin function
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, CURL)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
 // -------------------- MONGODB CONNECTION --------------------
-const mongoURI = process.env.MONGO_URI;
 mongoose
-  .connect(mongoURI, {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -52,7 +59,14 @@ mongoose
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -60,11 +74,6 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
-
-  // Example: admin-only room
-  if (socket.user?.role === "admin") {
-    socket.join("admins");
-  }
 
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
@@ -77,41 +86,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// -------------------- ROUTE IMPORTS --------------------
-const authRoutes = require("./routes/auth");
-const uploadRoute = require("./routes/uploadRoute"); 
-const productRoutes = require("./routes/products");
-const cartRoutes = require("./routes/cart");
-const wishlistRoutes = require("./routes/wishlist");
-const orderRoutes = require("./routes/order");
-const logoRoute = require("./routes/logoRoute");
-const heroBannerRoutes = require("./routes/heroBannerRoutes");
-const categoryBannerRoutes = require("./routes/categoryBannerRoutes");
-const userRoutes = require("./routes/userRoutes");
-const offerRoutes = require("./routes/offerRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const customerRoutes = require("./routes/customers");
-const notificationRoutes = require("./routes/notifications");
-const returnRoutes = require("./routes/returnRoutes");
-const contactRoutes = require("./routes/contactRoutes");
-
-// -------------------- API ROUTES --------------------
-app.use("/api/auth", authRoutes);
-app.use("/api/upload", uploadRoute);
-app.use("/api/products", productRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/offer", offerRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/logo", logoRoute);
-app.use("/api/category-banners", categoryBannerRoutes);
-app.use("/api/hero-banners", heroBannerRoutes);
-app.use("/api/users", customerRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/returns", returnRoutes);
-app.use("/api/contact", contactRoutes);
+// -------------------- ROUTES --------------------
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/upload", require("./routes/uploadRoute"));
+app.use("/api/products", require("./routes/products"));
+app.use("/api/cart", require("./routes/cart"));
+app.use("/api/wishlist", require("./routes/wishlist"));
+app.use("/api/orders", require("./routes/order"));
+app.use("/api/user", require("./routes/userRoutes"));
+app.use("/api/offer", require("./routes/offerRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/logo", require("./routes/logoRoute"));
+app.use("/api/category-banners", require("./routes/categoryBannerRoutes"));
+app.use("/api/hero-banners", require("./routes/heroBannerRoutes"));
+app.use("/api/users", require("./routes/customers"));
+app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/returns", require("./routes/returnRoutes"));
+app.use("/api/contact", require("./routes/contactRoutes"));
 
 // -------------------- ROOT ROUTE --------------------
 app.get("/", (req, res) => {
