@@ -7,27 +7,6 @@ const helmet = require("helmet");
 const ExcelJS = require("exceljs"); // small letters 'exceljs'
 const http = require("http");
 const { Server } = require("socket.io");
-const PORT = process.env.PORT || 4000;
-
-
-// -------------------- ROUTE IMPORTS --------------------
-const authRoutes = require("./routes/auth");
-const uploadRoute = require("./routes/uploadRoute"); 
-const productRoutes = require("./routes/products");
-const cartRoutes = require("./routes/cart");
-const wishlistRoutes = require("./routes/wishlist");
-const orderRoutes = require("./routes/order");
-const logoRoute = require("./routes/logoRoute");
-const heroBannerRoutes = require("./routes/heroBannerRoutes");
-const categoryBannerRoutes = require("./routes/categoryBannerRoutes");
-const userRoutes = require("./routes/userRoutes");
-const offerRoutes = require("./routes/offerRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const customerRoutes = require("./routes/customers");
-const notificationRoutes = require("./routes/notifications");
-const returnRoutes = require("./routes/returnRoutes"); // path to your return router
-const contactRoutes = require("./routes/contactRoutes");
-
 
 // -------------------- APP INITIALIZATION --------------------
 const app = express();
@@ -43,9 +22,18 @@ app.use(
   })
 );
 
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://ecommerce-frontend-ochre-eight-96.vercel.app", // Vercel frontend
+  "https://admin-frontend.vercel.app" // Vercel admin (if any)
+];
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
@@ -64,7 +52,8 @@ mongoose
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
     credentials: true,
   },
 });
@@ -88,6 +77,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// -------------------- ROUTE IMPORTS --------------------
+const authRoutes = require("./routes/auth");
+const uploadRoute = require("./routes/uploadRoute"); 
+const productRoutes = require("./routes/products");
+const cartRoutes = require("./routes/cart");
+const wishlistRoutes = require("./routes/wishlist");
+const orderRoutes = require("./routes/order");
+const logoRoute = require("./routes/logoRoute");
+const heroBannerRoutes = require("./routes/heroBannerRoutes");
+const categoryBannerRoutes = require("./routes/categoryBannerRoutes");
+const userRoutes = require("./routes/userRoutes");
+const offerRoutes = require("./routes/offerRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const customerRoutes = require("./routes/customers");
+const notificationRoutes = require("./routes/notifications");
+const returnRoutes = require("./routes/returnRoutes");
+const contactRoutes = require("./routes/contactRoutes");
+
 // -------------------- API ROUTES --------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoute);
@@ -105,7 +112,6 @@ app.use("/api/users", customerRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/returns", returnRoutes);
 app.use("/api/contact", contactRoutes);
-
 
 // -------------------- ROOT ROUTE --------------------
 app.get("/", (req, res) => {
